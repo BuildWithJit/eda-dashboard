@@ -11,7 +11,7 @@ Interactive Exploratory Data Analysis (EDA) Dashboard for Predictive Modelling u
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/buildwithjit/eda-dashboard.git
+   git clone https://github.com/BuildWithJit/eda-dashboard.git
    cd eda-dashboard
    ```
 
