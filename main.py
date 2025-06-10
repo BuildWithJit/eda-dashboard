@@ -59,6 +59,10 @@ def main():
     # Main header
     st.markdown('<h1 class="main-header">EDA Dashboard</h1>', unsafe_allow_html=True)
     st.markdown(
+        '<p style="text-align: center; font-size: 1.1rem; color: #888; margin-top: -1rem;">by <a href="https://subhajitbhar.com" target="_blank" style="color: #667eea; text-decoration: none; font-weight: bold;">Subhajit Bhar</a></p>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
         '<p style="text-align: center; font-size: 1.2rem; color: #666;">Upload your CSV file and get comprehensive data insights instantly</p>',
         unsafe_allow_html=True,
     )
@@ -66,15 +70,44 @@ def main():
     # File upload section
     st.markdown("## 📁 Data Upload")
 
-    with st.container():
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            uploaded_file = st.file_uploader(
-                "Choose a CSV file",
-                type=["csv"],
-                help="Upload a CSV file to start your exploratory data analysis",
-            )
+    # Option tabs for upload or sample data
+    tab1, tab2 = st.tabs(["📁 Upload Your Data", "🎯 Try Sample Dataset"])
 
+    uploaded_file = None
+    df = None
+
+    with tab1:
+        uploaded_file = st.file_uploader(
+            "Choose a CSV file",
+            type=["csv"],
+            help="Upload a CSV file to start your exploratory data analysis",
+        )
+
+    with tab2:
+        st.markdown("### 🚀 Quick Demo with Sample Data")
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            if st.button(
+                "🎯 Load Sample Dataset", type="primary", use_container_width=True
+            ):
+                try:
+                    # Load the actual sample dataset
+                    sample_file_path = "data/train_u6lujuX_CVtuZ9i.csv"
+                    df = pd.read_csv(sample_file_path)
+
+                    st.session_state["data"] = df
+                    st.session_state["uploaded"] = True
+                    st.session_state["sample_loaded"] = True
+
+                except FileNotFoundError:
+                    st.error(
+                        "❌ Sample dataset not found. Please upload your own CSV file."
+                    )
+                except Exception as e:
+                    st.error(f"❌ Error loading sample dataset: {str(e)}")
+                    st.info("💡 Please try uploading your own CSV file instead.")
+
+    # Handle uploaded file
     if uploaded_file is not None:
         try:
             # Load data
@@ -83,6 +116,7 @@ def main():
             # Store in session state
             st.session_state["data"] = df
             st.session_state["uploaded"] = True
+            st.session_state["sample_loaded"] = False
 
             # Show sidebar only when file is uploaded
             st.sidebar.title("🔧 Dashboard Controls")
@@ -99,6 +133,34 @@ def main():
         except Exception as e:
             st.error(f"❌ Error loading file: {str(e)}")
             st.info("💡 Please ensure your file is a valid CSV format")
+
+    # Handle sample data
+    elif st.session_state.get("sample_loaded", False):
+        df = st.session_state.get("data")
+        if df is not None:
+            # Show sidebar
+            st.sidebar.title("🔧 Dashboard Controls")
+            st.sidebar.markdown("---")
+            st.sidebar.info("📊 Using Sample Dataset")
+
+            # Add redirect to main domain
+            st.sidebar.markdown("### 👨‍💻 About the Developer")
+            st.sidebar.markdown("Built by **Subhajit Bhar** - Python & ML Engineer")
+            st.sidebar.markdown(
+                "🌐 **[Visit Main Website →](https://subhajitbhar.com)**"
+            )
+            st.sidebar.markdown("---")
+
+            # Success message
+            st.success(
+                f"✅ Sample dataset loaded with **{len(df)} rows** and **{len(df.columns)} columns**!"
+            )
+            st.info(
+                "🎯 This is the actual Kaggle loan prediction dataset for demonstration purposes."
+            )
+
+            # Display data overview
+            display_data_overview(df)
 
 
 def display_data_overview(df):
@@ -296,7 +358,7 @@ def display_column_info(df):
 
     fig = px.pie(
         values=dtype_counts.values,
-        names=dtype_counts.index,
+        names=[str(dtype) for dtype in dtype_counts.index],  # Convert to strings
         title="Distribution of Data Types",
     )
     st.plotly_chart(fig, use_container_width=True)
